@@ -7,7 +7,7 @@ CXXFLAGS=-std=c++20 -g -O2
 LDFLAGS=
 
 BUILD_DIR=build
-EXECUTABLE_NAME=string_ptr_test
+EXECUTABLE_NAME=safe_read_test
 EXECUTABLE=$(BUILD_DIR)/$(EXECUTABLE_NAME)
 
 SOURCES=$(shell find src -type f -name "*.cpp")
