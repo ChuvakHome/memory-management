@@ -1,0 +1,3 @@
+.clangd
+string_ptr_test
+*.o
