@@ -18,43 +18,35 @@
 
 namespace {
     static constexpr std::align_val_t STRING_PTR_ALIGNMENT = std::align_val_t{2};
-    static constexpr std::uintptr_t POINTER_MASK = ~static_cast<std::uintptr_t>(1);
 
-    inline const char* copy_string_aligned(const char *src, std::align_val_t alignment = STRING_PTR_ALIGNMENT) {
-        char* dst = nullptr;
+    static constexpr std::uintptr_t UNIQUE_BIT_MASK = 1;
+    static constexpr std::uintptr_t POINTER_MASK = ~UNIQUE_BIT_MASK;
 
+    static const std::uintptr_t NULL_UINTPTR = reinterpret_cast<std::uintptr_t>(nullptr);
+
+    inline const char *get_raw_ptr(std::uintptr_t p) {
+        return reinterpret_cast<const char *>(p & POINTER_MASK);
+    }
+
+    inline std::uintptr_t clear_unique_bit(std::uintptr_t p) {
+        return p & POINTER_MASK;
+    }
+
+    constexpr inline std::uintptr_t set_unique_bit(std::uintptr_t p) {
+        return ((p & POINTER_MASK) | UNIQUE_BIT_MASK);
+    }
+
+    inline std::uintptr_t copy_string_aligned(const char *src, std::align_val_t alignment = STRING_PTR_ALIGNMENT) {
         if (src != nullptr) {
             const std::size_t sz = std::strlen(src);
-            dst = new(alignment) char[sz + 1]();
+            char *dst = new(alignment) char[sz + 1]();
 
-            std::strncpy(dst, src, sz);
+            std::memcpy(dst, src, sz);
+
+            return set_unique_bit(reinterpret_cast<std::uintptr_t>(dst));
         }
 
-        return dst;
-    }
-
-    inline const void *get_raw_ptr(const void *src) {
-        return src == nullptr
-                ? nullptr
-                : reinterpret_cast<const void *>(
-                    (reinterpret_cast<std::uintptr_t>(src) & POINTER_MASK)
-                );
-    }
-
-    const void *get_raw_ptr(void *src) {
-        return src == nullptr
-                ? nullptr
-                : reinterpret_cast<void *>(
-                    (reinterpret_cast<std::uintptr_t>(src) & POINTER_MASK)
-                );
-    }
-
-    const void* get_ptr_with_mark_bit(const void *src, bool mark_bit) {
-        return src == nullptr
-                ? nullptr
-                : reinterpret_cast<const void *>(
-                    reinterpret_cast<std::uintptr_t>(get_raw_ptr(src)) | (mark_bit ? 1 : 0)
-                );
+        return NULL_UINTPTR;
     }
 }
 
@@ -63,16 +55,15 @@ inline std::ostream & operator<<(std::ostream &os, const string_ptr &s);
 
 struct string_ptr {
 private:
-    mutable const char *ptr_;
+    mutable std::uintptr_t ptr_;
 public:
     string_ptr(const char *src = nullptr)
         : ptr_(copy_string_aligned(src, STRING_PTR_ALIGNMENT)) {
         DEBUG_LOG("Allocate string_ptr from [" << static_cast<const void *>(src) << "]\n");
-        ptr_ = static_cast<const char *>(get_ptr_with_mark_bit(ptr_, true));
     }
 
     string_ptr(const string_ptr &other)
-        : ptr_(static_cast<const char *>(get_ptr_with_mark_bit(other.ptr_, false))) {
+        : ptr_(clear_unique_bit(other.ptr_)) {
         DEBUG_LOG("Copy string_ptr from (" << other << ")\n");
         other.ptr_ = ptr_;
     }
@@ -80,7 +71,7 @@ public:
     string_ptr(string_ptr&& other) noexcept
         : ptr_(other.ptr_) {
         DEBUG_LOG("Copy string_ptr from rvalue-ref(" << other << ")\n");
-        other.ptr_ = static_cast<const char *>(get_ptr_with_mark_bit(nullptr, false));
+        other.ptr_ = NULL_UINTPTR;
     }
 
     ~string_ptr() noexcept {
@@ -92,11 +83,7 @@ public:
         free_string_if_needed();
 
         DEBUG_LOG("Assign string_ptr from [" << static_cast<const void *>(src) << "]\n");
-
-        if (src != nullptr) {
-            ptr_ = copy_string_aligned(src);
-            ptr_ = static_cast<const char *>(get_ptr_with_mark_bit(ptr_, true));
-        }
+        ptr_ = copy_string_aligned(src);
 
         return *this;
     }
@@ -107,7 +94,7 @@ public:
         if (this != &other) {
             free_string_if_needed();
 
-            ptr_ = static_cast<const char *>(get_ptr_with_mark_bit(other.ptr_, false));
+            ptr_ = clear_unique_bit(other.ptr_);
             other.ptr_ = ptr_;
         }
 
@@ -121,7 +108,7 @@ public:
             free_string_if_needed();
 
             ptr_ = other.ptr_;
-            other.ptr_ = static_cast<const char *>(get_ptr_with_mark_bit(nullptr, false));
+            other.ptr_ = NULL_UINTPTR;
         }
 
         return *this;
@@ -140,26 +127,26 @@ public:
     }
 
     bool is_unique() const {
-        return (reinterpret_cast<std::uintptr_t>(ptr_) & 1) != 0;
+        return (ptr_ & UNIQUE_BIT_MASK) != 0;
     }
 
     bool is_non_unique() const {
-        return (reinterpret_cast<std::uintptr_t>(ptr_) & 1) == 0;
+        return (ptr_ & UNIQUE_BIT_MASK) == 0;
     }
 
     const char *data() const {
-        return static_cast<const char *>(get_raw_ptr(ptr_));
+        return get_raw_ptr(ptr_);
     }
 private:
     void free_string_if_needed() {
-        DEBUG_LOG("Deleting string requested\n");
+        DEBUG_LOG("String deletion requested\n");
 
         if (is_unique()) {
             DEBUG_LOG("Deallocating unique string [" << get_raw_ptr(static_cast<const void *>(ptr_)) << "]\n");
             delete[] data();
         }
 
-        ptr_ = nullptr;
+        ptr_ = NULL_UINTPTR;
     }
 };
 
