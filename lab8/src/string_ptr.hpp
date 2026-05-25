@@ -38,8 +38,8 @@ namespace {
 
     inline std::uintptr_t copy_string_aligned(const char *src, std::align_val_t alignment = STRING_PTR_ALIGNMENT) {
         if (src != nullptr) {
-            const std::size_t sz = std::strlen(src);
-            char *dst = new(alignment) char[sz + 1]();
+            const std::size_t sz = std::strlen(src) + 1;
+            char *dst = new(alignment) char[sz]();
 
             std::memcpy(dst, src, sz);
 
