@@ -6,11 +6,12 @@
 
 #include <cassert>
 #include <cstddef>
+#include <utility>
 
 #include <sys/mman.h>
-
 #include <unistd.h>
-#include <utility>
+
+#include "../overflow_handler/overflow_handler.hpp"
 
 namespace detail {
     const std::size_t PAGE_SIZE = sysconf(_SC_PAGESIZE);
@@ -55,6 +56,8 @@ public:
             std::exit(EXIT_FAILURE);
         }
 
+        add_memory_protected_region({first_free_, aligned_block_size});
+
         first_free_ += pool_size_;
     }
 
@@ -78,7 +81,7 @@ public:
         return instance;
     }
 
-    void deallocate(T *ptr, std::size_t n = 1) {
+    void deallocate(T *ptr) {
 
     }
 
