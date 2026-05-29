@@ -1,0 +1,7 @@
+
+#ifndef OVERFLOW_HANDLER_OVERFLOW_HANDLER_HPP
+#define OVERFLOW_HANDLER_OVERFLOW_HANDLER_HPP
+
+void add_overflow_handler();
+
+#endif

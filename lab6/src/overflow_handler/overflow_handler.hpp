@@ -12,7 +12,7 @@ struct MemoryRegion {
         return start + size;
     }
 
-    bool contains(std::byte *addr) const {
+    bool contains(const std::byte *addr) const {
         return start <= addr && addr <= get_end();
     }
 };
