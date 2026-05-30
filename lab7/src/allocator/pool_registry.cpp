@@ -13,8 +13,6 @@ namespace {
 }
 
 std::size_t pool_registry::find_pool(const std::byte *addr) {
-    std::size_t i;
-
     for (std::size_t i = 0; i < MAX_POOL_COUNT; ++i) {
         auto reg_start = memory_region_starts[i].load(std::memory_order_relaxed);
         auto reg_end = memory_region_sizes[i].load(std::memory_order_relaxed) + reg_start;

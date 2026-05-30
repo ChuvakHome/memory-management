@@ -84,9 +84,4 @@ void add_overflow_handler() {
         std::perror("Unable to set overflow_handler for SIGSEGV");
         std::exit(EXIT_FAILURE);
     }
-
-    if (sigaction(SIGBUS, &sig_action, &prev_sa_sigbus)) {
-        std::perror("Unable to set overflow_handler for SIGBUS");
-        std::exit(EXIT_FAILURE);
-    }
 }
