@@ -12,7 +12,6 @@
 
 namespace {
     struct sigaction prev_sa_sigsegv;
-    struct sigaction prev_sa_sigbus;
 
     std::size_t stringify_number(char buffer[], std::size_t n, std::size_t num) {
         std::size_t len;
@@ -66,7 +65,7 @@ namespace {
         }
 
         call_prev_sighandler(
-            &(signal == SIGSEGV ? prev_sa_sigsegv : prev_sa_sigbus),
+            &prev_sa_sigsegv,
             signal,
             info,
             ucontext
