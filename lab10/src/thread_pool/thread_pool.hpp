@@ -76,9 +76,7 @@ private:
     SafeQueue<Task> task_queue_;
 
     void thread_routine() {
-        static thread_local bool task_executed = false;
-
-        while (!task_executed && !stopped_) {
+        while (!stopped_) {
             task_queue_.wait_or([this]() -> bool { return stopped_; });
 
             if (stopped_) {
@@ -87,8 +85,6 @@ private:
 
             auto &&f = task_queue_.pop();
             f();
-
-            task_executed = true;
         }
     }
 };
