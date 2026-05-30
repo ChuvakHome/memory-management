@@ -9,3 +9,6 @@
 
 # Домашнее задание №9
 [Написать функцию безопасного чтения байта памяти по заданному адресу](https://github.com/ChuvakHome/memory-management/tree/main/lab9)
+
+# Домашнее задание №10
+[Параллельное копирование больших блоков данных при помощи пула потоков](https://github.com/ChuvakHome/memory-management/tree/main/lab10)
