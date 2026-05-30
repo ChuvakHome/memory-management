@@ -32,7 +32,7 @@ void* parallel_memcpy(void *dst, const void *src, std::size_t size) {
     std::byte *dest = static_cast<std::byte *>(dst);
 
     const std::size_t threads_num = pool->get_threads_num();
-    const std::size_t task_num = std::clamp<std::size_t>(size / MIN_CHUNK_SIZE, 0, threads_num);
+    const std::size_t task_num = std::clamp<std::size_t>(size / MIN_CHUNK_SIZE - 1, 0, threads_num);
     std::latch latch{std::ptrdiff_t(task_num)};
 
     const std::size_t chunk_size = size / (task_num + 1);
