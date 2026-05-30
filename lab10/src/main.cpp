@@ -16,7 +16,7 @@ int main() {
 
     std::uniform_int_distribution<std::uint8_t> dist(0, 255);
 
-    for (std::size_t threads_num = 0; threads_num <= 0; ++threads_num) {
+    for (std::size_t threads_num = 0; threads_num <= 8; ++threads_num) {
         std::cout << "====== Test with " << threads_num << " threads ====== \n";
 
         set_up_thread_pool(threads_num);

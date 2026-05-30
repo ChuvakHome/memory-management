@@ -3,9 +3,7 @@
 #include <cstddef>
 #include <cstring>
 
-#include <algorithm>
 #include <functional>
-#include <iostream>
 #include <latch>
 #include <optional>
 
@@ -16,7 +14,7 @@ namespace {
     #define COPY_THREADS_NUM 1
     #endif
 
-    constexpr std::size_t THREADS_NUM = std::clamp<std::size_t>(COPY_THREADS_NUM, 0, 8);
+    constexpr std::size_t MIN_CHUNK_SIZE = 1 << 12;
 
     std::optional<ThreadPool<std::function<void()>>> pool = std::nullopt;
 }
@@ -28,6 +26,8 @@ void set_up_thread_pool(std::size_t threads_num) {
 void* parallel_memcpy(void *dst, const void *src, std::size_t size) {
     if (size == 0) {
         return dst;
+    } else if (size < MIN_CHUNK_SIZE) {
+        return std::memcpy(dst, src, size);
     }
 
     const std::byte *orig = static_cast<const std::byte *>(src);
